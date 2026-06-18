@@ -7,8 +7,13 @@ let db: Database | null = null;
 export async function getDb() {
   if (db) return db;
   
+  // In production (Render), we will mount a persistent disk at /data
+  const dbPath = process.env.NODE_ENV === 'production' 
+    ? '/data/verite_ledger.sqlite'
+    : path.join(process.cwd(), 'verite_ledger.sqlite');
+    
   db = await open({
-    filename: path.join(process.cwd(), 'verite_ledger.sqlite'),
+    filename: dbPath,
     driver: sqlite3.Database
   });
 
