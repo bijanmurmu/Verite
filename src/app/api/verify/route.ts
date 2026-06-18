@@ -1,19 +1,24 @@
 import { NextResponse } from 'next/server';
-import { getDb } from '@/app/lib/db';
+import { supabase } from '@/app/lib/db';
 
 export async function POST(request: Request) {
   try {
     const { hash } = await request.json();
     if (!hash) return NextResponse.json({ error: 'No hash provided' }, { status: 400 });
 
-    const db = await getDb();
-    
-    // Query the real SQLite database using SQL
-    const row = await db.get('SELECT * FROM ledger WHERE hash = ?', [hash]);
+    const { data, error } = await supabase
+      .from('ledger')
+      .select('*')
+      .eq('hash', hash)
+      .single();
 
-    return NextResponse.json({ verified: !!row });
+    if (error && error.code !== 'PGRST116') { // PGRST116 means no rows returned
+      console.error("Verify Supabase Error:", error);
+    }
+
+    return NextResponse.json({ verified: !!data });
   } catch (error) {
-    console.error("Verify DB Error:", error);
-    return NextResponse.json({ success: false, error: "Database error" }, { status: 500 });
+    console.error("Verify API Error:", error);
+    return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });
   }
 }

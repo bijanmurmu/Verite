@@ -1,24 +1,7 @@
-import sqlite3 from 'sqlite3';
-import { open, Database } from 'sqlite';
-import path from 'path';
+import { createClient } from '@supabase/supabase-js';
 
-let db: Database | null = null;
+// Fallback to placeholder strings to prevent build errors if env vars are missing
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder';
 
-export async function getDb() {
-  if (db) return db;
-  
-  db = await open({
-    filename: path.join(process.cwd(), 'verite_ledger.sqlite'),
-    driver: sqlite3.Database
-  });
-
-  // Initialize the database table
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS ledger (
-      hash TEXT PRIMARY KEY,
-      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  return db;
-}
+export const supabase = createClient(supabaseUrl, supabaseKey);
